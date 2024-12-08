@@ -1,0 +1,89 @@
+<!-- <p>task-list works!</p> -->
+<div>
+  <p-table [columns]="taskListColumns" [value]="taskListData" styleClass="p-datatable-gridlines">
+    <ng-template pTemplate="caption">
+      <div style="display: flex; justify-content: space-between;align-items: center; height: 5vh;">
+        <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+          <h3>SALES LOGS</h3>
+          <button pButton class="p-button-outlined p-button-sm" style="margin-left: 10px;" icon="pi pi-plus-circle"
+            label="New Task" (click)="taskListFormDialogvisible = true;"></button>
+        </div>
+        <!-- <p-button icon="pi pi-add" label="New Task"></p-button> -->
+        <div>
+          <input type="text" placeholder="Search" pInputText class="p-button-sm">
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th *ngFor="let column of columns">{{ column }}</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-data>
+      <tr>
+        <td> {{ data?.['date'] }} </td>
+        <td> {{ data?.['entity_name'] }} </td>
+        <td> {{ data?.['task_type'] }} </td>
+        <td> {{ data?.['time'] }} </td>
+        <td> {{ data?.['contact_person'] }} </td>
+        <td> {{ data?.['notes'] }} </td>
+        <td> {{ data?.['status'] }} </td>
+        <td>
+
+          <p-splitButton label="Options" styleClass="p-button-sm p-button-outlined p-button-plain" appendTo="body"
+            [model]="items"></p-splitButton>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+<p-dialog header="" [(visible)]="taskListFormDialogvisible" [modal]="true" [responsive]="false"
+  [style]="{width: '50vw', minWidth: '40vw'}" [maximizable]="false" [closable]="false" [draggable]="false"
+  [closeOnEscape]="false">
+  <ng-template pTemplate="content">
+    <form [formGroup]="taskForm">
+      <div class="" style="display: flex; flex-direction: column;">
+
+        <div
+          style="margin-top: 5px; display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+          <h3>NEW TASK</h3>
+          <p-selectButton [options]="stateOptions" formControlName="status"></p-selectButton>
+        </div>
+        <div style="margin-top: 5px; flex-direction: row;">
+          <input type="text" placeholder="Entity Name" pInputText [style]="{width: '100%'}"
+            formControlName="entity_name">
+        </div>
+        <div style="margin-top: 5px; display: flex ; flex-direction: row;">
+          <p-calendar [readonlyInput]="true" appendTo="body" [showIcon]="true" [style]="{width: '100%'}"
+            placeholder="Slect Date" formControlName="date"></p-calendar>
+          <p-calendar [readonlyInput]="true" appendTo="body" [style]="{width: '100%'}" [showTime]="true"
+            [timeOnly]="true" [hourFormat]="'12'" placeholder="Select Time" [showIcon]="true" icon="pi pi-clock"
+            formControlName="time"></p-calendar>
+
+        </div>
+        <div style="margin-top: 5px;  flex-direction: row;">
+          <p-dropdown appendTo="body" [options]="['Meeting', 'Call', 'Video Call']" placeholder="Select Task Type"
+            [style]="{width: '100%'}" formControlName="task_type"></p-dropdown>
+        </div>
+        <div style="margin-top: 5px; flex-direction: row;">
+          <input type="text" placeholder="Phone Number" pInputText [style]="{width: '100%'}"
+            formControlName="phone_number">
+        </div>
+        <div style="margin-top: 5px; flex-direction: row;">
+          <input type="text" placeholder="Contact Person" pInputText [style]="{width: '100%'}"
+            formControlName="contact_person">
+        </div>
+        <div style="margin-top: 5px; flex-direction: row;">
+          <textarea pInputTextarea placeholder="Note (optional)" rows="7" [style]="{width: '100%'}"
+            formControlName="note"></textarea>
+        </div>
+
+      </div>
+    </form>
+  </ng-template>
+  <p-footer>
+    <button pButton class="p-button-outlined" label="Cancel" (click)="taskListFormDialogvisible= false"></button>
+    <button pButton class="p-button" label="Save"
+      (click)="onTaskFormSave($event); taskForm.updateValueAndValidity()"></button>
+  </p-footer>
+</p-dialog>
