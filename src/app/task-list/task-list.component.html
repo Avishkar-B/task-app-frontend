@@ -1,6 +1,8 @@
 <!-- <p>task-list works!</p> -->
 <div>
-  <p-table [columns]="taskListColumns" [value]="taskListData" styleClass="p-datatable-gridlines">
+  <p-table #dt1 [columns]="taskListColumns" [value]="taskListData" styleClass="p-datatable-striped p-datatable-sm"
+    rowGroupMode="subheader" groupRowsBy="date" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [paginator]="true"
+    [globalFilterFields]="['date', 'entity_name', 'task_type','contact_person','note','status']">
     <ng-template pTemplate="caption">
       <div style="display: flex; justify-content: space-between;align-items: center; height: 5vh;">
         <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
@@ -10,28 +12,82 @@
         </div>
         <!-- <p-button icon="pi pi-add" label="New Task"></p-button> -->
         <div>
-          <input type="text" placeholder="Search" pInputText class="p-button-sm">
+          <input type="text" (input)="dt1.filterGlobal($event.target, 'contains')" placeholder="Search" pInputText
+            class="p-button-sm">
         </div>
       </div>
     </ng-template>
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th *ngFor="let column of columns">{{ column }}</th>
+        <th [colSpan]="8">
+
+        </th>
+      </tr>
+      <tr>
+        <th [pSortableColumn]="column?.key" *ngFor="let column of columns">{{ column.header }} <p-sortIcon
+            field="code"></p-sortIcon>
+          <ng-container [ngSwitch]="column.key">
+            <ng-container *ngSwitchCase="'task_type'">
+              <p-columnFilter [field]="column?.key" matchMode="in" display="menu" [showMatchModes]="false"
+                [showOperator]="false" [showAddButton]="false">
+                <ng-template pTemplate="header">
+                  <div class="px-3 pt-3 pb-0">
+                    <span class="font-bold">Task Type</span>
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-listbox [options]="['Meeting', 'Call', 'Video Call']" [style]="{'width':'15rem'}" [checkbox]="true"
+                    [multiple]="true" (onChange)="filter($event.value)"></p-listbox>
+                </ng-template>
+              </p-columnFilter>
+            </ng-container>
+            <ng-container *ngSwitchCase="'status'">
+              <p-columnFilter [field]="column?.key" matchMode="in" display="menu" [showMatchModes]="false"
+                [showOperator]="false" [showAddButton]="false">
+                <ng-template pTemplate="header">
+                  <div class="px-3 pt-3 pb-0">
+                    <span class="font-bold">Task Type</span>
+                  </div>
+                </ng-template>
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-listbox [options]="['Open', 'Closed']" [style]="{'width':'15rem'}" [checkbox]="true"
+                    [multiple]="true" (onChange)="filter($event.value)"></p-listbox>
+                </ng-template>
+              </p-columnFilter>
+            </ng-container>
+            <ng-container *ngSwitchCase="'options'">
+
+            </ng-container>
+            <ng-container *ngSwitchDefault>
+              <p-columnFilter type="text" [field]="column?.key" display="menu"></p-columnFilter>
+            </ng-container>
+          </ng-container>
+        </th>
       </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-data>
+    <!-- <ng-template pTemplate="groupheader" let-data>
+      <tr pRowGroupHeader>
+        <td colspan="8">
+          <span class="font-bold ml-2">{{data.date | date : 'd/MMM/yyyy'}}</span>
+        </td>
+      </tr>
+    </ng-template> -->
+    <ng-template pTemplate="body" let-data let-i="rowIndex">
       <tr>
-        <td> {{ data?.['date'] }} </td>
-        <td> {{ data?.['entity_name'] }} </td>
-        <td> {{ data?.['task_type'] }} </td>
-        <td> {{ data?.['time'] }} </td>
-        <td> {{ data?.['contact_person'] }} </td>
+        <td> {{ data?.['date'] | date : 'd/M/yyyy' }} </td>
+        <td> {{ data?.['entity_name'] | titlecase }} </td>
+        <td> <i
+            [class]="data['task_type'].toLowerCase() == 'call'? 'pi pi-phone' : data['task_type'].toLowerCase() == 'video call' ? 'pi pi-video' : 'pi pi-map-marker'"></i>
+          {{ data?.['task_type'] | titlecase }} </td>
+        <td> {{ data?.['time'] | date : 'h:mm a' }} </td>
+        <td> {{ data?.['contact_person'] | titlecase }} </td>
         <td> {{ data?.['notes'] }} </td>
-        <td> {{ data?.['status'] }} </td>
+        <td> {{ data?.['status'] | titlecase }} </td>
         <td>
 
           <p-splitButton label="Options" styleClass="p-button-sm p-button-outlined p-button-plain" appendTo="body"
-            [model]="items"></p-splitButton>
+            [model]="data?.['model_options']"
+            (onDropdownClick)="setTaskOptionsFunctionality($event, i)"></p-splitButton>
         </td>
       </tr>
     </ng-template>
@@ -39,7 +95,8 @@
 </div>
 <p-dialog header="" [(visible)]="taskListFormDialogvisible" [modal]="true" [responsive]="false"
   [style]="{width: '50vw', minWidth: '40vw'}" [maximizable]="false" [closable]="false" [draggable]="false"
-  [closeOnEscape]="false">
+  [closeOnEscape]="false" (visibleChange)="taskForm.reset(); taskForm.updateValueAndValidity()"
+  (onHide)="taskForm.reset(); taskForm.updateValueAndValidity()">
   <ng-template pTemplate="content">
     <form [formGroup]="taskForm">
       <div class="" style="display: flex; flex-direction: column;">
@@ -53,7 +110,7 @@
           <input type="text" placeholder="Entity Name" pInputText [style]="{width: '100%'}"
             formControlName="entity_name">
         </div>
-        <div style="margin-top: 5px; display: flex ; flex-direction: row;">
+        <div style="margin-top: 5px; display: flex ; flex-direction: row; width: 100%; justify-content: space-between;">
           <p-calendar [readonlyInput]="true" appendTo="body" [showIcon]="true" [style]="{width: '100%'}"
             placeholder="Slect Date" formControlName="date"></p-calendar>
           <p-calendar [readonlyInput]="true" appendTo="body" [style]="{width: '100%'}" [showTime]="true"
@@ -66,8 +123,10 @@
             [style]="{width: '100%'}" formControlName="task_type"></p-dropdown>
         </div>
         <div style="margin-top: 5px; flex-direction: row;">
-          <input type="text" placeholder="Phone Number" pInputText [style]="{width: '100%'}"
+          <input type="number" placeholder="Phone Number" pInputText [style]="{width: '100%'}"
             formControlName="phone_number">
+          <!-- <p-inputNumber formControlName="phone_number" inputId="integeronly" prefix="+91" [ngStyle]="{width: '100%'}">
+          </p-inputNumber> -->
         </div>
         <div style="margin-top: 5px; flex-direction: row;">
           <input type="text" placeholder="Contact Person" pInputText [style]="{width: '100%'}"
